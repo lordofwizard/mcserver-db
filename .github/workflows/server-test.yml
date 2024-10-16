@@ -33,7 +33,7 @@ jobs:
 
     - name: Check if server is up
       run: |
-        curl --fail http://localhost:8000 || exit 1
+        curl --fail http://localhost:6969 || exit 1
 
     - name: Shut down FastAPI server
       if: always()
