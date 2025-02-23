@@ -1,24 +1,11 @@
 version: "3.8"
 
 services:
-  web:
+  fastapi-app:
     build: .
+    container_name: fastapi-jars
     ports:
       - "6969:6969"
-    env_file:
-      - .env
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-
+      - ./jars_data.db:/app/jars_data.db  # Persist the SQLite database
+    restart: unless-stopped

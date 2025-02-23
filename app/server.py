@@ -8,7 +8,6 @@ from datetime import datetime
 
 app = FastAPI()
 
-# SQLite setup
 DATABASE_NAME = "jars_data.db"
 
 def init_db():

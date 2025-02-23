@@ -13,30 +13,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # Check out the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Start FastAPI server
-      run: |
-        nohup uvicorn app.server:app --host 0.0.0.0 --port 6969 &
-        sleep 10  # Wait for the server to be up
+      # Start the FastAPI server in the background
+      - name: Start FastAPI server
+        run: |
+          nohup uvicorn app.server:app --host 0.0.0.0 --port 6969 > server.log 2>&1 &
+          echo $! > server.pid  # Save the process ID
+          sleep 10  # Wait for the server to start
 
-    - name: Check if server is up
-      run: |
-        curl --fail http://localhost:6969 || exit 1
+      # Check if the server is running
+      - name: Check if server is up
+        run: |
+          curl --fail http://localhost:6969 || exit 1
 
-    - name: Shut down FastAPI server
-      if: always()
-      run: |
-        pkill -f uvicorn
-
+      # Shut down the FastAPI server (even if the previous steps fail)
+      - name: Shut down FastAPI server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+            rm server.pid
+          fi
+          pkill -f uvicorn || true  # Ensure the server is stopped
