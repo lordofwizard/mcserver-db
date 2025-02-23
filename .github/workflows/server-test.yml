@@ -34,12 +34,25 @@ jobs:
         run: |
           nohup uvicorn app.server:app --host 0.0.0.0 --port 6969 > server.log 2>&1 &
           echo $! > server.pid  # Save the process ID
-          sleep 10  # Wait for the server to start
 
-      # Check if the server is running
-      - name: Check if server is up
+      # Wait for the server to start (with retries)
+      - name: Wait for server to start
         run: |
-          curl --fail http://localhost:6969 || exit 1
+          echo "Waiting for the server to start..."
+          timeout=60  # Maximum wait time in seconds
+          interval=5  # Interval between retries
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl --fail http://localhost:6969 > /dev/null 2>&1; then
+              echo "Server is up and running!"
+              exit 0
+            fi
+            sleep $interval
+            elapsed=$((elapsed + interval))
+            echo "Waiting... ($elapsed seconds elapsed)"
+          done
+          echo "Server did not start within $timeout seconds."
+          exit 1
 
       # Shut down the FastAPI server (even if the previous steps fail)
       - name: Shut down FastAPI server
